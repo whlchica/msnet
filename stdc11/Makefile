@@ -1,8 +1,8 @@
 # 完整项目的makefile
--include ../scripts/common.mk
+APP-build := stdc11
+
+LDFLAGS += -pthread
 
 DIR := src/
 
-APP-build := stdc11
-
--include ../scripts/built-in.mk
+-include ../scripts/builtin.mk

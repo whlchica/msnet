@@ -45,15 +45,14 @@ PHONY := all
 all:: $(OBJS) $(APP-build) $(LIB-build)
 	$(ECHO) -e "\033[36mDone $^\033[0m"
 
+$(OBJS)::
+	$(Q)@make -C $(DIR) -f $(TOPDIR)/scripts/builtin_build.Makefile
+
 $(LIB-build):: 
 	$(Q)$(CXX) $(CXXFLAGS) -shared -Wl,-soname,$@ $(LDFLAGS) -o $@ $(OBJS) $>
 
-$(APP-build):: 
+$(APP-build)::
 	$(Q)$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $> $(LDFLAGS) 
-
-PHONY += $(OBJS)
-$(OBJS): 
-	$(Q)@make -C $(DIR) -f $(TOPDIR)/scripts/builtin_build.Makefile
 
 # make clean distclean
 #

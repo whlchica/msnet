@@ -4,16 +4,16 @@
 src-y += common-include/
 src-y += libg726/
 src-y += libnet/
-#src-y += stdc11/
+src-y += stdc11/
 
-all-dirs := $(src-y) $(lib-y)
+all-dirs := $(src-y)
 PHONY := all
 all: $(all-dirs)
 	@echo all done
 	
 PHONY+= $(all-dirs)
 $(all-dirs):
-	@cd $@; make -j8
+	@cd $@; make
 
 # make clean
 #
