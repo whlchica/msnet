@@ -64,7 +64,15 @@ public:
     {
         return tryAllocAndWrite(&c, 1);
     }
-
+    
+    int Remove(size_t n)
+    {
+        CommRWLock pMutex(&_lock);
+        int        readSize = n < _offset ? n : _offset;
+        _offset -= readSize;
+        ::memmove(_allocPtr, _allocPtr + readSize, _offset);
+        return readSize;
+    }
 private:
     int tryAllocAndWrite(char* p, int n)
     {
