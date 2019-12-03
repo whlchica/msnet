@@ -1,5 +1,5 @@
 # 完整项目的makefile
-APP-build := stdc11
+APP-build := c11
 
 LDFLAGS += -pthread
 

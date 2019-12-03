@@ -1,12 +1,11 @@
 LIB-build := libnet.so
-
 # 头文件路径
 LDFLAGS +=
 
 INCLUDES += -I./include 
 
-CXXFLAGS += $(INCLUDES) $(LDFLAGS)
+CXXFLAGS += $(INCLUDES)
 # 源文件
-DIRS := src
+SRCS := src/socket.cpp
 
 -include ../scripts/compile.mk
