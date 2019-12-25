@@ -2,9 +2,9 @@
 
 # make dirs
 src-y += common-include/
-src-y += libg726/
 src-y += libnet/
 src-y += c++11/
+src-y += msnet/
 
 all-dirs := $(src-y)
 PHONY := all
