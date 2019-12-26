@@ -4,10 +4,10 @@
 #include "asio.hpp"
 //
 #include "AVframeRtmp.h"
-#include "buffer.h"
+#include "AVmp4.h"
 #include "Common_Def.h"
+#include "buffer.h"
 #include <string>
-
 class TcpSession : public std::enable_shared_from_this<TcpSession> {
 private:
     asio::ip::tcp::socket _socket;
@@ -16,6 +16,7 @@ private:
     bytes::Buffer         _recvBuffer;
     bytes::Buffer         _sendBuffer;
     AVframeRtmp           _rtmpPublisher;
+    AVmp4                 _mp4Writer;
     bool                  _isPublisherWait;
 
 public:

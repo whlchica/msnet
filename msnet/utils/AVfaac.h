@@ -4,6 +4,11 @@
 #include "3rd/faac/include/faac.h"
 #include <string.h>
 
+enum {
+    AAC_STREAM_RAW = 0,
+    AAC_STREAM_ADTS = 1,
+};
+
 class AVfaac {
 private:
     faacEncHandle  _faacEnc;
@@ -20,14 +25,14 @@ public:
     ~AVfaac() {}
 
     // 8000 1 16
-    bool init(int nSamplePerSec, int nChn, int nBitsPerSample)
+    bool init(int nSamplePerSec, int nChn, int nBitsPerSample, int nOfmt)
     {
         _nBitPerSample = nBitsPerSample;
         _faacEnc = faacEncOpen(nSamplePerSec, nChn, &_inputSamples, &_maxOutputBytes);
         unsigned long           maxInputBytes = _inputSamples * nBitsPerSample / 8;  // 计算最大输入字节
         faacEncConfigurationPtr pfaacEncConf = faacEncGetCurrentConfiguration(_faacEnc);
         pfaacEncConf->inputFormat = FAAC_INPUT_16BIT;
-        pfaacEncConf->outputFormat = 0;  // 0:RAW——STREAM	1:ADTS-STREAM
+        pfaacEncConf->outputFormat = nOfmt;  // 0:RAW——STREAM	1:ADTS-STREAM
         pfaacEncConf->useTns = true;
         pfaacEncConf->useLfe = false;
         pfaacEncConf->aacObjectType = LOW;

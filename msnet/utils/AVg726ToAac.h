@@ -17,10 +17,10 @@ public:
     AVg726ToAac(/* args */) {}
     ~AVg726ToAac() {}
 
-    void init()
+    void init(int nOfmt = AAC_STREAM_RAW)
     {
         _avg726.init(40000, G726_PACKING_RIGHT);
-        _avfaac.init(8000, 1, 16);
+        _avfaac.init(8000, 1, 16, nOfmt);
         _pAmpBuffer = new char[KAmpBufSize * 2];
         _nAmpOffset = 0;
     }

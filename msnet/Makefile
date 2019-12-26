@@ -13,6 +13,9 @@ else
 INCLUDES +=  -I./3rd/librtmp 
 LDFLAGS += ./3rd/librtmp/librtmp.a ./3rd/faac/libfaac/.libs/libfaac.a
 endif
+
+LDFLAGS += -L/usr/local/lib -lavutil -lavformat -lavcodec
+
 # 编译选项
 CXXFLAGS += $(INCLUDES) -DASIO_STANDALONE
 
