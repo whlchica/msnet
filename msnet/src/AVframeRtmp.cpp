@@ -1,6 +1,6 @@
 
 #include "AVframeRtmp.h"
-#include "UtilRtmp.h"
+#include "UtilRtmp.hpp"
 #include <stdio.h>
 
 #if defined(SRS_LIBRTMP)
@@ -58,7 +58,6 @@ void AVframeRtmp::publishVideoFrame(char* frame, int len, int type, unsigned lon
     }
 }
 #else
-#include "UtilRtmp.h"
 
 AVframeRtmp::AVframeRtmp()
 {

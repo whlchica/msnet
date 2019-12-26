@@ -185,37 +185,6 @@ int SendPacket(RTMP* r, unsigned int nPacketType, unsigned char* data, unsigned 
     return nRet;
 }
 
-// 解析Nalu
-std::vector<std::string> ParseNalUnit(char* pFrameData, int nFrameLength)
-{
-    std::vector<std::string> nalVec;
-    std::string              strFrameData(pFrameData, nFrameLength);
-    char                     szNalu3[4] = { 0x00, 0x00, 0x01 };  //不找00000001
-    int                      nNalu3 = 3;
-    std::string              strNaluStart(szNalu3, nNalu3);
-    // char szNalu4[5] = { 0x00, 0x00, 0x00, 0x01, 0x00 };
-    bool bFind = false;
-    int  nPos = strFrameData.find(/*szNalu3*/ strNaluStart);
-    if (-1 == nPos) {
-        return nalVec;
-    }
-    while (-1 != nPos) {
-        if (!bFind) {
-            strFrameData = std::string(strFrameData.c_str() + nPos + nNalu3, strFrameData.length() - nPos - nNalu3);
-            bFind = true;
-        } else {
-            //找到非最后一个
-            std::string strNalu(strFrameData.c_str(), nPos);
-            nalVec.push_back(strNalu);
-            strFrameData = std::string(strFrameData.c_str() + nPos + nNalu3, strFrameData.length() - nPos - nNalu3);
-        }
-        nPos = strFrameData.find(/*szNalu3*/ strNaluStart);
-    }
-    //最后一个
-    nalVec.push_back(strFrameData);
-    return nalVec;
-}
-
 // H264 RTMP
 int Send264Videoframe(RTMP* r, std::string strNalu, uint32_t dts)
 {

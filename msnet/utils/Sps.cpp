@@ -99,7 +99,81 @@ void de_emulation_prevention(BYTE* buf, unsigned int* buf_size)
 
  * @成功则返回1 , 失败则返回0
  */
-int h264_decode_sps(BYTE* buf, unsigned int nLen, int& width, int& height, int& fps)
+
+namespace hevc {
+int decode_sps(BYTE* buf, unsigned int nLen, int& width, int& height, int& fps)
+{
+    if (nLen < 20) {
+        return false;
+    }
+    UINT StartBit = 0;
+    fps = 0;
+    de_emulation_prevention(buf, &nLen);
+    u(4, buf, StartBit);  // sps_video_parameter_set_id
+    int sps_max_sub_layers_minus1 = u(3, buf, StartBit);
+    if (sps_max_sub_layers_minus1 > 6) {
+        return false;
+    }
+    u(1, buf, StartBit);
+    {
+        u(3, buf, StartBit);
+        int profile = u(5, buf, StartBit);
+        u(32, buf, StartBit);
+        u(48, buf, StartBit);
+        int     level = u(8, buf, StartBit);  // general_level_idc
+        uint8_t sub_layer_profile_present_flag[6] = { 0 };
+        uint8_t sub_layer_level_present_flag[6] = { 0 };
+        for (int i = 0; i < sps_max_sub_layers_minus1; i++) {
+            sub_layer_profile_present_flag[i] = u(1, buf, StartBit);
+            sub_layer_level_present_flag[i] = u(1, buf, StartBit);
+        }
+        if (sps_max_sub_layers_minus1 > 0) {
+            for (int i = sps_max_sub_layers_minus1; i < 8; i++) {
+                uint8_t reserved_zero_2bits = u(2, buf, StartBit);
+            }
+        }
+        for (int i = 0; i < sps_max_sub_layers_minus1; i++) {
+            if (sub_layer_profile_present_flag[i]) {
+                u(8, buf, StartBit);
+                u(32, buf, StartBit);
+                u(48, buf, StartBit);
+            }
+            if (sub_layer_level_present_flag[i]) {
+                u(8, buf, StartBit);  // sub_layer_level_idc[i]
+            }
+        }
+    }
+    uint32_t sps_seq_parameter_set_id = Ue(buf, nLen, StartBit);
+    if (sps_seq_parameter_set_id > 15) {
+        return false;
+    }
+    uint32_t chroma_format_idc = Ue(buf, nLen, StartBit);
+    if (sps_seq_parameter_set_id > 3) {
+        return false;
+    }
+    if (chroma_format_idc == 3) {
+        u(1, buf, StartBit);
+    }
+    width = Ue(buf, nLen, StartBit);   // pic_width_in_luma_samples
+    height = Ue(buf, nLen, StartBit);  // pic_height_in_luma_samples
+    if (u(1, buf, StartBit)) {
+        Ue(buf, nLen, StartBit);
+        Ue(buf, nLen, StartBit);
+        Ue(buf, nLen, StartBit);
+        Ue(buf, nLen, StartBit);
+    }
+    uint32_t bit_depth_luma_minus8 = Ue(buf, nLen, StartBit);
+    uint32_t bit_depth_chroma_minus8 = Ue(buf, nLen, StartBit);
+    if (bit_depth_luma_minus8 != bit_depth_chroma_minus8) {
+        return false;
+    }  //...
+    fps = 25;
+    return true;
+}
+}  // namespace hevc
+
+namespace avc {
+int decode_sps(BYTE* buf, unsigned int nLen, int& width, int& height, int& fps)
 {
     UINT StartBit = 0;
     fps = 0;
@@ -206,7 +280,42 @@ int h264_decode_sps(BYTE* buf, unsigned int nLen, int& width, int& height, int& 
                 fps = time_scale / (2 * num_units_in_tick);
             }
         }
+        if (fps == 0) {
+            fps = 25;
+        }
         return true;
     } else
         return false;
+}
+}  // namespace avc
+
+// 解析Nalu
+std::vector<std::string> ParseNalUnit(char* pFrameData, int nFrameLength)
+{
+    std::vector<std::string> nalVec;
+    std::string              strFrameData(pFrameData, nFrameLength);
+    char                     szNalu3[4] = { 0x00, 0x00, 0x01 };  //不找00000001
+    int                      nNalu3 = 3;
+    std::string              strNaluStart(szNalu3, nNalu3);
+    // char szNalu4[5] = { 0x00, 0x00, 0x00, 0x01, 0x00 };
+    bool bFind = false;
+    int  nPos = strFrameData.find(/*szNalu3*/ strNaluStart);
+    if (-1 == nPos) {
+        return nalVec;
+    }
+    while (-1 != nPos) {
+        if (!bFind) {
+            strFrameData = std::string(strFrameData.c_str() + nPos + nNalu3, strFrameData.length() - nPos - nNalu3);
+            bFind = true;
+        } else {
+            //找到非最后一个
+            std::string strNalu(strFrameData.c_str(), nPos);
+            nalVec.push_back(strNalu);
+            strFrameData = std::string(strFrameData.c_str() + nPos + nNalu3, strFrameData.length() - nPos - nNalu3);
+        }
+        nPos = strFrameData.find(/*szNalu3*/ strNaluStart);
+    }
+    //最后一个
+    nalVec.push_back(strFrameData);
+    return nalVec;
 }

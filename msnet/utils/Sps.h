@@ -15,6 +15,8 @@
 #define __SPS_H__
 
 #include <stdio.h>
+#include <vector>
+#include <string>
 
 typedef unsigned int  UINT;
 typedef unsigned char BYTE;
@@ -98,6 +100,17 @@ enum {
     NAL_UNIT_UNSPECIFIED_63,
     NAL_UNIT_INVALID,
 };
+/**
+ * 解码SPS,获取视频图像宽、高信息
+ *
+ * @param buf SPS数据内容
+ * @param nLen SPS数据的长度
+ * @param width 图像宽度
+ * @param height 图像高度
+
+ * @成功则返回1 , 失败则返回0
+ */
+int decode_sps(BYTE* buf, unsigned int nLen, int& width, int& height, int& fps);
 }
 
 namespace avc {
@@ -115,7 +128,6 @@ enum {
     NALU_TYPE_EOSTREAM = 11,
     NALU_TYPE_FILL = 12,
 };
-}
 /**
  * 解码SPS,获取视频图像宽、高信息
  *
@@ -126,6 +138,9 @@ enum {
 
  * @成功则返回1 , 失败则返回0
  */
-int h264_decode_sps(BYTE* buf, unsigned int nLen, int& width, int& height, int& fps);
+int decode_sps(BYTE* buf, unsigned int nLen, int& width, int& height, int& fps);
+}
 
+// 解析Nalu, 去掉Nalu头
+std::vector<std::string> ParseNalUnit(char* pFrameData, int nFrameLength);
 #endif
