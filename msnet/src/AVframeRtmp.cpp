@@ -4,7 +4,12 @@
 #include <stdio.h>
 
 #if defined(SRS_LIBRTMP)
-AVframeRtmp::AVframeRtmp() {}
+AVframeRtmp::AVframeRtmp()
+{
+    _avg726.init(40000, G726_PACKING_RIGHT);
+    _startVTime = 0;
+}
+
 AVframeRtmp::~AVframeRtmp()
 {
     srs_rtmp_destroy(_rtmp);
@@ -40,13 +45,14 @@ bool AVframeRtmp::initUrl(const char* url)
     return true;
 }
 
-// 这里需要把
-void AVframeRtmp::publishVideoFrame(char* frame, int len, int type, unsigned long long pts)
+// 这里只能上产到srs服务，nginx不行
+void AVframeRtmp::publishVideoframe(char* frame, int len, int type, unsigned long long pts)
 {
-    if (_startTime == 0) {
-        _startTime = pts;
+    if (_startVTime == 0) {
+        _startVTime = pts;
     }
-    _errCode = srs_h264_write_raw_frames(_rtmp, frame, len, (pts - _startTime) / 1000, pts / 1000);
+    uint32_t dts = (pts - _startVTime) / 1000;
+    _errCode = srs_h264_write_raw_frames(_rtmp, frame, len, dts, dts);
     if (srs_h264_is_dvbsp_error(_errCode)) {
         _errMsg = "ignore drop video error";
     } else if (srs_h264_is_duplicated_sps_error(_errCode)) {
@@ -57,6 +63,30 @@ void AVframeRtmp::publishVideoFrame(char* frame, int len, int type, unsigned lon
         _errMsg = "send h264 raw data failed";
     }
 }
+
+// G726 转 pcm
+void AVframeRtmp::publishAudioframe(char* frame, int len, unsigned long long pts)
+{
+    // 海思G726转PCM
+    // char ampBuf[1024] = { 0 };
+    // int  pcmLen = _avg726.decodec(frame, len, ampBuf);
+    // if (pcmLen != 640) {
+    //     return;
+    // }
+    // 直接发送pcm
+    // srs_audio_write_raw_frame(_rtmp, 3, 1, 1, 0, ampBuf, pcmLen, (pts - _startVTime) / 1000);
+    // return
+
+    // 发送AAC
+    int            aacLen = 0;
+    unsigned char* aac = _g726ToAac.toAacEncodec(frame, len, aacLen);
+    if (aacLen == 0) {
+        return;
+    }
+    uint32_t    dts = (pts - _startVTime) / 1000;
+    srs_audio_write_raw_frame(_rtmp, 10, 1, 1, 0, (char*)aac, aacLen, dts);
+}
+
 #else
 
 AVframeRtmp::AVframeRtmp()
@@ -112,8 +142,8 @@ bool AVframeRtmp::initUrl(const char* url)
             _errMsg = "Connect Stream Error";
             RTMP_Close(_rtmp);
             break;
-        }      
-        RTMP_LogSetLevel(RTMP_LOGCRIT); //不显示打印日志
+        }
+        RTMP_LogSetLevel(RTMP_LOGCRIT);  //不显示打印日志
         return true;
     } while (0);
     RTMP_Free(_rtmp);

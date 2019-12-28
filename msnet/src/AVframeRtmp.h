@@ -1,11 +1,13 @@
 #ifndef __VFRAME_RTMP_H__
 #define __VFRAME_RTMP_H__
 
+#define SRS_LIBRTMP 1
+
 #if defined(SRS_LIBRTMP)
-#include "srs_librtmp.h"
+#include "srs/srs_librtmp.h"
 #else
-#include "rtmp.h"
 #include "librtmp/log.h"
+#include "rtmp.h"
 #endif
 #include "AVg726ToAac.h"
 #include <functional>
@@ -13,11 +15,6 @@
 
 class AVframeRtmp {
 private:
-#if defined(SRS_LIBRTMP)
-    srs_rtmp_t _rtmp;
-#else
-    RTMP* _rtmp;
-#endif
     AVg726ToAac        _g726ToAac;
     const char*        _errMsg;
     int                _errCode;
@@ -26,7 +23,13 @@ private:
     bool               _isWaitKeyframe;
     int                _frameType;
     // 发布流
+#if defined(SRS_LIBRTMP)
+    srs_rtmp_t _rtmp;
+    AVg726     _avg726;
+#else
+    RTMP*                                            _rtmp;
     std::function<int(RTMP*, std::string, uint32_t)> _publishFunc;
+#endif
 
 public:
     AVframeRtmp();
