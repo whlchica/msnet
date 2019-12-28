@@ -1,5 +1,5 @@
 #include "SrvTcpBusiness.h"
-#include "x2struct.hpp"
+#include "3rd/x2struct-1.1/x2struct.hpp"
 
 ho::MsgHeader_t new_response(unsigned short codeId, int len)
 {

@@ -3,11 +3,13 @@
 #include <iostream>
 
 TcpSession::TcpSession(asio::ip::tcp::socket socket) : _socket(std::move(socket)) {}
-TcpSession::TcpSession(asio::io_context& context) : _socket(context) {}
+TcpSession::TcpSession(asio::io_service& context) : _socket(context) {}
 TcpSession::~TcpSession() {}
 void TcpSession::start()
 {
     _isPublisherWait = true;
+    asio::ip::tcp::no_delay noDelay(true);
+    _socket.set_option(noDelay);
     doRead();
 }
 
@@ -130,7 +132,7 @@ int TcpSession::doRspMediaRegister(char* req, int len)
         return 0;
     }
     _isPublisherWait = false;
-    _mp4Writer.fpname(_devId.c_str());
+    // _mp4Writer.fpname(_devId.c_str());
     doRspMsgHeader(new_response(ho::KCodeID_Rsp_MediaRegister, payloadStr.length()));
     _sendBuffer.WriteString(payloadStr);
     return ho::MsgHeaderLen + payloadStr.length();

@@ -1,14 +1,14 @@
 #ifndef TCPSESSION_H
 #define TCPSESSION_H
 #pragma once
-#include "asio.hpp"
+#include "AsioBase.h"
 //
 #include "AVframeRtmp.h"
-#include "AVmp4.h"
+// #include "AVmp4.h"
 #include "Common_Def.h"
 #include "buffer.h"
 #include <string>
-class TcpSession : public std::enable_shared_from_this<TcpSession> {
+class TcpSession : public std::enable_shared_from_this<TcpSession>, asio::noncopyable {
 private:
     asio::ip::tcp::socket _socket;
     char                  _data[1024];
@@ -16,12 +16,12 @@ private:
     bytes::Buffer         _recvBuffer;
     bytes::Buffer         _sendBuffer;
     AVframeRtmp           _rtmpPublisher;
-    AVmp4                 _mp4Writer;
-    bool                  _isPublisherWait;
+    // AVmp4                 _mp4Writer;
+    bool _isPublisherWait;
 
 public:
     TcpSession(asio::ip::tcp::socket socket);
-    TcpSession(asio::io_context& context);
+    TcpSession(asio::io_service& context);
     ~TcpSession();
 
     void                   start();

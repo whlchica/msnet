@@ -2,7 +2,7 @@
 #define __UTIL_RTMP_H__
 
 #include "Sps.h"
-#include "rtmp.h"
+#include "librtmp/rtmp.h"
 #include <string.h>
 #include <vector>
 

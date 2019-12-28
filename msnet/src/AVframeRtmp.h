@@ -5,6 +5,7 @@
 #include "srs_librtmp.h"
 #else
 #include "rtmp.h"
+#include "librtmp/log.h"
 #endif
 #include "AVg726ToAac.h"
 #include <functional>

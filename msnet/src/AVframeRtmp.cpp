@@ -112,7 +112,8 @@ bool AVframeRtmp::initUrl(const char* url)
             _errMsg = "Connect Stream Error";
             RTMP_Close(_rtmp);
             break;
-        }
+        }      
+        RTMP_LogSetLevel(RTMP_LOGCRIT); //不显示打印日志
         return true;
     } while (0);
     RTMP_Free(_rtmp);

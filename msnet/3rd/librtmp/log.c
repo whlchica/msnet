@@ -91,6 +91,9 @@ RTMP_LogLevel RTMP_LogGetLevel()
 
 void RTMP_Log(int level, const char *format, ...)
 {
+	if(level > RTMP_debuglevel) {
+		return;
+	}
 	va_list args;
 	//va_start(args, format);
 	//cb(level, format, args);
