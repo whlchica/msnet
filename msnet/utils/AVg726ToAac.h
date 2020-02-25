@@ -46,7 +46,7 @@ public:
         // 海思G726转PCM
         int   reLen = KAmpBufSize - _nAmpOffset;
         char* offsetAmpBuf = _pAmpBuffer + _nAmpOffset;
-        int   pcmLen = _avg726.decodec(data, len, offsetAmpBuf);
+        int   pcmLen = _avg726.decodec2(data, len, offsetAmpBuf);
         if (pcmLen != 640) {
             return NULL;
         }

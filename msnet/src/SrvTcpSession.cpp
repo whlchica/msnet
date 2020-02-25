@@ -57,14 +57,10 @@ bool TcpSession::dispatchMessage(char* data, int len)
             case ho::KFrameType_Video_P:
                 _rtmpPublisher.publishVideoframe(palyloadData + 12, pMsgHeader->unPayloadLen - 12,
                                                  pMeHeader->usFrameType, pMeHeader->ullFrameTimeStamp);
-                // _mp4Writer.writeVideoframe(palyloadData + 12, pMsgHeader->unPayloadLen - 12, pMeHeader->usFrameType,
-                //                            pMeHeader->ullFrameTimeStamp);
                 break;
             case ho::KFrameType_Audio:
                 _rtmpPublisher.publishAudioframe(palyloadData + 12, pMsgHeader->unPayloadLen - 12,
                                                  pMeHeader->ullFrameTimeStamp);
-                // _mp4Writer.writeAudioframe(palyloadData + 12, pMsgHeader->unPayloadLen - 12,
-                //                            pMeHeader->ullFrameTimeStamp);
                 break;
             default:
                 break;
@@ -126,13 +122,12 @@ int TcpSession::doRspMediaRegister(char* req, int len)
     if (payloadStr.empty()) {
         return 0;
     }
-    std::string rtmpUrl = "rtmp://192.168.3.215:1935/live/";
+    std::string rtmpUrl = "rtmp://127.0.0.1:1935/live/";
     if (!_rtmpPublisher.initUrl(rtmpUrl.append(_devId).c_str())) {
         printf("%s\n", _rtmpPublisher.errorMsg());
         return 0;
     }
     _isPublisherWait = false;
-    // _mp4Writer.fpname(_devId.c_str());
     doRspMsgHeader(new_response(ho::KCodeID_Rsp_MediaRegister, payloadStr.length()));
     _sendBuffer.WriteString(payloadStr);
     return ho::MsgHeaderLen + payloadStr.length();

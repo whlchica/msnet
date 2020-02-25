@@ -4,7 +4,6 @@
 #include "AsioBase.h"
 //
 #include "AVframeRtmp.h"
-// #include "AVmp4.h"
 #include "Common_Def.h"
 #include "buffer.h"
 #include <string>
@@ -16,7 +15,6 @@ private:
     bytes::Buffer         _recvBuffer;
     bytes::Buffer         _sendBuffer;
     AVframeRtmp           _rtmpPublisher;
-    // AVmp4                 _mp4Writer;
     bool _isPublisherWait;
 
 public:

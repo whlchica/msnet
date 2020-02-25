@@ -8,11 +8,16 @@ AVframeRtmp::AVframeRtmp()
 {
     _avg726.init(40000, G726_PACKING_RIGHT);
     _startVTime = 0;
+    _startATime = 0;
 }
 
 AVframeRtmp::~AVframeRtmp()
 {
     srs_rtmp_destroy(_rtmp);
+    _g726ToAac.uinit();
+    _avg726.uninit();
+    _startVTime = 0;
+    _startATime = 0;
 }
 
 const char* AVframeRtmp::errorMsg()
@@ -42,6 +47,9 @@ bool AVframeRtmp::initUrl(const char* url)
         return false;
     }
     _errCode = 0;
+    _fpName = url;
+    std::string::size_type m = _fpName.rfind("/", _fpName.length());
+    _fpWriter.initfp(&_fpName.at(( int )m + 1));
     return true;
 }
 
@@ -68,23 +76,27 @@ void AVframeRtmp::publishVideoframe(char* frame, int len, int type, unsigned lon
 void AVframeRtmp::publishAudioframe(char* frame, int len, unsigned long long pts)
 {
     // 海思G726转PCM
-    // char ampBuf[1024] = { 0 };
-    // int  pcmLen = _avg726.decodec(frame, len, ampBuf);
-    // if (pcmLen != 640) {
-    //     return;
-    // }
-    // 直接发送pcm
-    // srs_audio_write_raw_frame(_rtmp, 3, 1, 1, 0, ampBuf, pcmLen, (pts - _startVTime) / 1000);
-    // return
-
-    // 发送AAC
-    int            aacLen = 0;
-    unsigned char* aac = _g726ToAac.toAacEncodec(frame, len, aacLen);
-    if (aacLen == 0) {
+    char ampBuf[1024] = { 0 };
+    int  pcmLen = _avg726.decodec(frame, len, ampBuf);
+    if (pcmLen != 640) {
         return;
     }
-    uint32_t    dts = (pts - _startVTime) / 1000;
-    srs_audio_write_raw_frame(_rtmp, 10, 1, 1, 0, (char*)aac, aacLen, dts);
+    // 直接发送pcm
+    srs_audio_write_raw_frame(_rtmp, 3, 3, 1, 0, ampBuf, pcmLen, (pts - _startVTime) / 1000);
+    return;
+    // _fpWriter.write(frame, len);
+    // // 发送AAC
+    // if (_startATime == 0) {
+    //     _startATime = pts;
+    //     _g726ToAac.init();
+    // }
+    // int            aacLen = 0;
+    // unsigned char* aac = _g726ToAac.toAacEncodec(frame, len, aacLen);
+    // if (aacLen == 0) {
+    //     return;
+    // }
+    // uint32_t dts = (pts - _startVTime) / 1000;
+    // srs_audio_write_raw_frame(_rtmp, 10, 1, 1, 1, ( char* )aac, aacLen, dts);
 }
 
 #else
@@ -144,6 +156,11 @@ bool AVframeRtmp::initUrl(const char* url)
             break;
         }
         RTMP_LogSetLevel(RTMP_LOGCRIT);  //不显示打印日志
+        // _fpName = url;
+        // std::string::size_type m = _fpName.rfind("/", _fpName.length());
+        // std::string            devID = &_fpName.at(( int )m + 1);
+        // _g726Writer.initfp((devID.append(".g726").c_str()));
+        // _mp4Writer.fpname(devID.c_str());
         return true;
     } while (0);
     RTMP_Free(_rtmp);
@@ -183,6 +200,7 @@ void AVframeRtmp::publishVideoframe(char* frame, int len, int type, unsigned lon
     if (_frameType == 0) {
         return;
     }
+    // _mp4Writer.writeVideoframe(frame, len, type, pts);
     uint32_t dts = (pts - _startVTime) / 1000;
     for (int i = 0; i < naluSize; i++) {
         _publishFunc(_rtmp, naluVec[i], dts);
@@ -193,10 +211,12 @@ void AVframeRtmp::publishVideoframe(char* frame, int len, int type, unsigned lon
 // 可以参考 http://billhoo.blog.51cto.com/2337751/1557646/
 void AVframeRtmp::publishAudioframe(char* frame, int len, unsigned long long pts)
 {
+    //_mp4Writer.writeAudioframe(frame, len, pts);
     if (_startATime == 0) {
         _startATime = pts;
         _g726ToAac.init();
     }
+    // _g726Writer.write(frame, len);
     int            aacLen = 0;
     unsigned char* aac = _g726ToAac.toAacEncodec(frame, len, aacLen);
     if (aacLen == 0) {
