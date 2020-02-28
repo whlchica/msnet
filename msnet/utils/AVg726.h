@@ -12,7 +12,9 @@ private:
     int           _nDecLen = 0;
 
 public:
-    AVg726(/* args */) {}
+    AVg726(/* args */) {
+        _stat = NULL;
+    }
     ~AVg726() {}
 
     //  16000 24000 32000 40000

@@ -2,12 +2,15 @@
 #include "SrvTcpBusiness.h"
 #include <iostream>
 
+#include "DevMng.h"
+
 TcpSession::TcpSession(asio::ip::tcp::socket socket) : _socket(std::move(socket)) {}
 TcpSession::TcpSession(asio::io_service& context) : _socket(context) {}
 TcpSession::~TcpSession() {}
 void TcpSession::start()
 {
     _isPublisherWait = true;
+    _isAutoClose = false;
     asio::ip::tcp::no_delay noDelay(true);
     _socket.set_option(noDelay);
     doRead();
@@ -75,13 +78,24 @@ bool TcpSession::dispatchMessage(char* data, int len)
     return true;
 }
 
+void TcpSession::autoClose()
+{
+    _isAutoClose = true;
+}
+
 void TcpSession::doRead()
 {
     auto self(shared_from_this());
+    if (_isAutoClose) {
+        printf(":-----------------> %s auto close\n", _devId.c_str());
+        _socket.close();
+        return;
+    }
     _socket.async_read_some(asio::buffer(_data, 1024), [this, self](std::error_code ec, std::size_t len) {
         if (!ec && dispatchMessage(_data, len)) {
             doRead();
         } else {
+            DevMng::Instance()->RemoveDev(_devId.c_str(), 0, 0);
             _socket.close();
             printf(":-----------------> async_read_some error %d\n", ec.value());
         }
@@ -122,12 +136,18 @@ int TcpSession::doRspMediaRegister(char* req, int len)
     if (payloadStr.empty()) {
         return 0;
     }
-    std::string rtmpUrl = "rtmp://127.0.0.1:1935/live/";
+    std::string rtmpUrl = GetRtmpBaseUrl();
     if (!_rtmpPublisher.initUrl(rtmpUrl.append(_devId).c_str())) {
         printf("%s\n", _rtmpPublisher.errorMsg());
         return 0;
     }
+    if(!DevMng::Instance()->AddDev(_devId, shared_from_this())) {
+        printf(":-----------------> the device upper limit has been reached.\n");
+        _isAutoClose = true;
+        return 0;
+    }
     _isPublisherWait = false;
+    // 这里把设备添加到管理列表
     doRspMsgHeader(new_response(ho::KCodeID_Rsp_MediaRegister, payloadStr.length()));
     _sendBuffer.WriteString(payloadStr);
     return ho::MsgHeaderLen + payloadStr.length();

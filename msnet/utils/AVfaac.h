@@ -21,7 +21,11 @@ private:
     unsigned char  _cSpecialData[8];  // 音频特殊信息
 
 public:
-    AVfaac(/* args */) {}
+    AVfaac(/* args */)
+    {
+        _faacEnc = NULL;
+        _pOutputBytes = NULL;
+    }
     ~AVfaac() {}
 
     // 8000 1 16

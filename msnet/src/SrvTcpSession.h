@@ -15,7 +15,8 @@ private:
     bytes::Buffer         _recvBuffer;
     bytes::Buffer         _sendBuffer;
     AVframeRtmp           _rtmpPublisher;
-    bool _isPublisherWait;
+    bool                  _isPublisherWait;
+    bool                  _isAutoClose;
 
 public:
     TcpSession(asio::ip::tcp::socket socket);
@@ -25,6 +26,8 @@ public:
     void                   start();
     bool                   dispatchMessage(char* data, int len);
     asio::ip::tcp::socket& socket();
+
+    void autoClose();
 
 private:
     void doRead();
@@ -37,5 +40,6 @@ private:
     // 媒体链路注册响应
     int doRspMediaRegister(char* req, int len);
 };
+typedef  std::shared_ptr<TcpSession> tcp_session_ptr;
 
 #endif  // !TCPSESSION_H

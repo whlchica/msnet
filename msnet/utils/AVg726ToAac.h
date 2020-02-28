@@ -14,7 +14,9 @@ private:
     int    _nAmpOffset;
 
 public:
-    AVg726ToAac(/* args */) {}
+    AVg726ToAac(/* args */) {
+        _pAmpBuffer = NULL;
+    }
     ~AVg726ToAac() {}
 
     void init(int nOfmt = AAC_STREAM_RAW)
