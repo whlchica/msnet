@@ -9,3 +9,5 @@
  * asio-1.12.2
 
  * g7xx https://www.soft-switch.org/downloads/spandsp/
+
+ * comm-inc https://github.com/donwg/comm-inc
