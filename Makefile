@@ -1,32 +1,36 @@
-# 遍历指定目录执行make
+# 
+APP-build := msnet
 
-# make dirs
-src-y += common-include/
-src-y += libnet/
-src-y += c++11/
-src-y += msnet/
+# 头文件路径
+INCLUDES += -I ./  -I ./3rd
+INCLUDES += -I ./3rd/comm-inc/include/common
+INCLUDES += -I ./3rd/asio-1.12.2  
+INCLUDES += -I ./3rd/x2struct-1.1 
+INCLUDES += -I ./3rd/faac
+INCLUDES += -I ./3rd/librtmp  
+INCLUDES += -I ./utils
 
-all-dirs := $(src-y)
-PHONY := all
-all: $(all-dirs)
-	@echo all done
-	
-PHONY+= $(all-dirs)
-$(all-dirs):
-	@cd $@; make || exit $? ;
+LDFLAGS += ./3rd/librtmp/librtmp.a ./3rd/faac/libfaac/.libs/libfaac.a
 
-# make clean
-#
-clean-dirs := $(addprefix _clean_, $(all-dirs))
-PHONY += clean
-clean: $(clean-dirs)
-	@echo clean done
-$(clean-dirs):
-	@make -C $(patsubst _clean_%, %, $@) clean || exit $? ;
+# LDFLAGS += -L/usr/local/lib -lavutil -lavformat -lavcodec
 
-PHONY += distclean
-distclean: clean
-	@rm -f $(shell find ./ -name "*.d")
-#	$(Q)@rm -r $(prefix)
+ifeq (y, $(USE_SRS_LIBRTMP))
+CXXFLAGS += -DSRS_LIBRTMP
+DIRS += srs
+endif
+# 编译选项
+CXXFLAGS += $(INCLUDES) -DASIO_STANDALONE -DASIO_HAS_STD_CHRONO
 
-.PHONY: $(PHONY)
+# 生成可执行程序链接库
+LDFLAGS += -ldl -lrt -pthread -Wl,-rpath=./
+
+# 源文件
+DIRS += utils g7xx
+SRCS += AVframeRtmp.cpp \
+		CommBusiness.cpp \
+		ConfigXml.cpp \
+		SrvTcpSession.cpp \
+		DevMng.cpp \
+		Main.cpp \
+
+-include scripts/compile.mk

@@ -24,7 +24,7 @@ endif
 #-------------------------------------------------------------------------------
 # 这里定义通用的编译参数，不同项目在对应Makefile中配置
 # c 编译参数
-CFLAGS += -fPIC -Wdeprecated-declarations $(CFLAGS_OPT)
+CFLAGS += -fPIC -Wdeprecated-declarations -Wunused-variable $(CFLAGS_OPT)
 # c++ 编译参数
 CXXFLAGS += $(CFLAGS) -std=c++11
 
